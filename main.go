@@ -4,29 +4,20 @@ import (
 	"context"
 	"learn/efsm/dispatcher"
 	"learn/efsm/handlers"
+	"time"
 )
 
 func main() {
 	ctx := context.Background()
 
 	globalDispatcher := dispatcher.New(ctx)
-	allocationHandler := handlers.NewAllocation()
-
-	globalDispatcher.RegisterHandler(allocationHandler)
 	globalDispatcher.Start()
 
-	globalDispatcher.AddEvent(&EventOne{})
+	globalDispatcher.RegisterHandler(handlers.NewAllocation())
+	globalDispatcher.RegisterHandler(handlers.NewParser())
+
+	time.Sleep(1 * time.Second)
+	globalDispatcher.AddEvent(&handlers.ParserEvent{})
 	for {
 	}
-}
-
-type EventOne struct {
-}
-
-func (e EventOne) Type() dispatcher.EventType {
-	return "EventOne"
-}
-
-func (e EventOne) Data() []byte {
-	return []byte("EventOne")
 }

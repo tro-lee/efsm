@@ -5,6 +5,7 @@ import (
 	"learn/efsm/dispatcher"
 	"learn/efsm/fsm"
 	"log"
+	"reflect"
 )
 
 type Allocation struct {
@@ -46,7 +47,7 @@ func (a *Allocation) Start(ctx context.Context) {
 
 		event, ok := data.(dispatcher.Event)
 		if !ok {
-			log.Println("\033[1;32mevent is not dispatcher.Event\033[0m")
+			log.Println("\033[35mevent is not dispatcher.Event\033[0m")
 		}
 
 		handlers := master.HandlerPool()[event.Type()]
@@ -55,7 +56,8 @@ func (a *Allocation) Start(ctx context.Context) {
 		if len(handlers) > 0 {
 			for _, handler := range handlers {
 				if handler.Status() == dispatcher.Ready {
-					log.Printf("\033[1;32m%s: %s handle %s \033[0m\n", "AllocationHandler Allocation", handler.Type(), event.Type())
+					log.Printf("\033[35m%s: %s handle %s \033[0m\n", "AllocationHandler Allocation", reflect.TypeOf(handler), event.Type())
+					handler.Handle(event)
 					a.fsm.Transition("Scan", event)
 					return
 				}
@@ -63,7 +65,7 @@ func (a *Allocation) Start(ctx context.Context) {
 		}
 
 		// 退还事件
-		log.Printf("\033[1;32m%s: %s cant'be handled \033[0m\n", "AllocationHandler Allocation", event.Type())
+		log.Printf("\033[1;32m%s: %s cant be handled \033[0m\n", "AllocationHandler Allocation", event.Type())
 		master.AddEvent(event)
 		a.fsm.Transition("Scan", nil)
 	})

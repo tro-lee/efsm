@@ -18,7 +18,7 @@ type EventDispathcer struct {
 func New(ctx context.Context) *EventDispathcer {
 	return &EventDispathcer{
 		ctx:          ctx,
-		initHandlers: make(chan EventHandler, 1),
+		initHandlers: make(chan EventHandler, 20),
 		handlerPool:  make(map[EventType][]EventHandler),
 		eventQueue:   make([]Event, 0),
 	}
@@ -28,13 +28,15 @@ func (ed *EventDispathcer) Start() {
 	log.Printf("\033[32mSuccess start dispatcher!\033[0m\n")
 	ed.ctx = context.WithValue(ed.ctx, "dispather", ed)
 	go func() {
-		select {
-		case <-ed.ctx.Done():
-			return
-		case handler := <-ed.initHandlers:
-			log.Printf("\033[33mSuccess register Handler!: %v\033[0m\n", reflect.TypeOf(handler))
-			handler.Start(ed.ctx)
-			ed.handlerPool[handler.Type()] = append(ed.handlerPool[handler.Type()], handler)
+		for {
+			select {
+			case <-ed.ctx.Done():
+				return
+			case handler := <-ed.initHandlers:
+				log.Printf("\033[33mSuccess register Handler!: %v\033[0m\n", reflect.TypeOf(handler))
+				handler.Start(ed.ctx)
+				ed.handlerPool[handler.Type()] = append(ed.handlerPool[handler.Type()], handler)
+			}
 		}
 	}()
 }
