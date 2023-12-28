@@ -2,14 +2,31 @@ package main
 
 import (
 	"context"
-	"learn/efsm/fsm"
+	"learn/efsm/dispatcher"
+	"learn/efsm/handlers"
 )
 
 func main() {
 	ctx := context.Background()
 
-	f := fsm.New().WithContext(ctx)
+	globalDispatcher := dispatcher.New(ctx)
+	allocationHandler := handlers.NewAllocation()
 
-	f.NewState().FromStart().To("state1").OnEnter(func(s *fsm.State) {
-	})
+	globalDispatcher.RegisterHandler(allocationHandler)
+	globalDispatcher.Start()
+
+	globalDispatcher.AddEvent(&EventOne{})
+	for {
+	}
+}
+
+type EventOne struct {
+}
+
+func (e EventOne) Type() dispatcher.EventType {
+	return "EventOne"
+}
+
+func (e EventOne) Data() []byte {
+	return []byte("EventOne")
 }

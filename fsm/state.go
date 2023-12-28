@@ -8,14 +8,13 @@ type State struct {
 	Source      []string
 	Destination string
 
-	onEnterFunc func(*State)
+	onEnterFunc func(*State, interface{})
 
-	parallel bool
-	fromAny  bool
-	ctx      context.Context
-	cancel   context.CancelFunc
+	fromAny bool
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
-
 
 func (st *State) To(dn string) *State {
 	st.Destination = dn
@@ -32,18 +31,8 @@ func (st *State) From(src ...string) *State {
 	return st
 }
 
-func (st *State) FromStart() *State {
-	st.Source = []string{"start"}
-	return st
-}
-
-func (st *State) OnEnter(f func(s *State)) *State {
+func (st *State) OnEnter(f func(s *State, data interface{})) *State {
 	st.onEnterFunc = f
-	return st
-}
-
-func (st *State) Parallel(p bool) *State {
-	st.parallel = p
 	return st
 }
 
