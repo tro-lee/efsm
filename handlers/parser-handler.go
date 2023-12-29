@@ -4,7 +4,7 @@ import (
 	"context"
 	"learn/efsm/dispatcher"
 	"learn/efsm/fsm"
-	"log"
+	"learn/efsm/out"
 	"math/rand"
 	"reflect"
 	"time"
@@ -25,12 +25,12 @@ func (p *Parser) Start(ctx context.Context) {
 
 	// 开机等待事件
 	p.fsm.NewState().FromAny().To("Start").OnEnter(func(s *fsm.State, data interface{}) {
-		log.Printf("\033[36m%s: %s ready\033[0m\n", "Parser-Handler", reflect.TypeOf(p))
+		out.Start("%s ready", reflect.TypeOf(p))
 		p.status = dispatcher.Ready
 	})
 
 	p.fsm.NewState().FromAny().To("Error").OnEnter(func(s *fsm.State, data interface{}) {
-		log.Println("\033[31m Parser-Handler Error\033[0m")
+		out.Error("%s error", reflect.TypeOf(p))
 		p.status = dispatcher.Error
 
 		master := p.fsm.CurrentState.Context().Value("dispather").(*dispatcher.EventDispathcer)
@@ -46,9 +46,8 @@ func (p *Parser) Start(ctx context.Context) {
 			return
 		}
 
-		log.Printf("\033[36m%s: %s start handle %s \033[0m\n", "Parser-Handler", reflect.TypeOf(p), data.(dispatcher.Event).Type())
+		out.Running("%s running", reflect.TypeOf(p))
 		time.Sleep(time.Duration(rand.Int63n(10)) * time.Second)
-		log.Printf("\033[36m%s: %s end handle %s \033[0m\n", "Parser-Handler", reflect.TypeOf(p), data.(dispatcher.Event).Type())
 		p.fsm.Transition("Start", nil)
 	})
 
@@ -62,6 +61,10 @@ func (p *Parser) Handle(e dispatcher.Event) {
 
 func (p *Parser) Status() dispatcher.EventHandlerStatus {
 	return p.status
+}
+
+func (p *Parser) SetStatus(status dispatcher.EventHandlerStatus) {
+	p.status = status
 }
 
 func (p *Parser) Type() dispatcher.EventType {

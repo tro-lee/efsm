@@ -2,12 +2,13 @@ package dispatcher
 
 import (
 	"context"
+	"learn/efsm/out"
 	"log"
 	"reflect"
 )
 
 type EventDispathcer struct {
-	eventQueue  []Event
+	eventQueue  chan Event
 	handlerPool map[EventType][]EventHandler
 
 	ctx context.Context
@@ -20,7 +21,7 @@ func New(ctx context.Context) *EventDispathcer {
 		ctx:          ctx,
 		initHandlers: make(chan EventHandler, 20),
 		handlerPool:  make(map[EventType][]EventHandler),
-		eventQueue:   make([]Event, 0),
+		eventQueue:   make(chan Event, 50),
 	}
 }
 
@@ -33,7 +34,7 @@ func (ed *EventDispathcer) Start() {
 			case <-ed.ctx.Done():
 				return
 			case handler := <-ed.initHandlers:
-				log.Printf("\033[33mSuccess register Handler!: %v\033[0m\n", reflect.TypeOf(handler))
+				out.Success("Success register Handler!: %v", reflect.TypeOf(handler))
 				handler.Start(ed.ctx)
 				ed.handlerPool[handler.Type()] = append(ed.handlerPool[handler.Type()], handler)
 			}
@@ -42,12 +43,10 @@ func (ed *EventDispathcer) Start() {
 }
 
 func (ed *EventDispathcer) AddEvent(event Event) {
-	log.Printf("Add event: %v\n", event.Type())
-	ed.eventQueue = append(ed.eventQueue, event)
+	ed.eventQueue <- event
 }
 
 func (ed *EventDispathcer) RegisterHandler(eh EventHandler) {
-	log.Printf("Add handler: %v\n", reflect.TypeOf(eh))
 	ed.initHandlers <- eh
 }
 
@@ -55,12 +54,6 @@ func (ed *EventDispathcer) HandlerPool() map[EventType][]EventHandler {
 	return ed.handlerPool
 }
 
-func (ed *EventDispathcer) EventQueue() []Event {
+func (ed *EventDispathcer) EventQueue() chan Event {
 	return ed.eventQueue
-}
-
-func (ed *EventDispathcer) Pop() Event {
-	result := ed.eventQueue[0]
-	ed.eventQueue = ed.eventQueue[1:]
-	return result
 }

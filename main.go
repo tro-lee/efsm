@@ -18,6 +18,9 @@ func main() {
 
 	time.Sleep(1 * time.Second)
 	globalDispatcher.AddEvent(&handlers.ParserEvent{})
+
+	globalDispatcher.AddEvent(&handlers.ParserEvent{})
+
 	for {
 	}
 }

@@ -6,6 +6,7 @@ type EventHandler interface {
 	Start(ctx context.Context)
 
 	Status() EventHandlerStatus
+	SetStatus(status EventHandlerStatus)
 	Type() EventType
 
 	Handle(e Event)
